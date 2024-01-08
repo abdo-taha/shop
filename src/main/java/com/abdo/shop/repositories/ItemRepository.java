@@ -1,20 +1,16 @@
 package com.abdo.shop.repositories;
 
-
-
-
-
 import java.util.List;
+import java.util.Optional;
 
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.abdo.shop.model.entity.ItemEntity;
 
 @Repository
-public interface ItemRepository extends CrudRepository<ItemEntity,Long> {
+public interface ItemRepository extends JpaRepository<ItemEntity, Long> {
+    Optional<ItemEntity> findByQr(String qr);
 
-    public ItemEntity findByQr(Long qr);
-
-    public List<ItemEntity> findByDescriptionContaining(String key);
-} 
+    List<ItemEntity> findByQrStartsWith(String qr);
+}

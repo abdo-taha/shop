@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,64 +14,91 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.abdo.shop.model.dto.ItemDto;
+import com.abdo.shop.model.dto.request.CreateItemRequest;
+import com.abdo.shop.model.dto.request.EditItemRequest;
+import com.abdo.shop.model.dto.request.SearchRequest;
+import com.abdo.shop.model.dto.response.ItemResponse;
+
 import com.abdo.shop.services.ItemService;
+import com.abdo.shop.services.PhotoService;
+
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
-@RequestMapping("/items")
+@RequestMapping("api/v1/items")
 @RequiredArgsConstructor
 public class ItemController {
     private final ItemService itemService;
-    
-    @GetMapping
-    public List<ItemDto> getAllItems() {
-        return itemService.getAllItems();
+    private final PhotoService photoService;
+
+    @GetMapping("")
+    public ResponseEntity<List<ItemResponse>> getAllItems() {
+        return ResponseEntity.ok(itemService.getAll());
+
     }
 
-    @PostMapping
-    public ResponseEntity<ItemDto> addItem(@RequestBody ItemDto item) {
-        return ResponseEntity.created(null).body(itemService.createItem(item));
+    @GetMapping("/{id}")
+    public ResponseEntity<ItemResponse> getItem(@PathVariable Long id) {
+        return ResponseEntity.ok(itemService.getItemById(id));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<ItemResponse>> searchWithKeys(@RequestBody SearchRequest searchRequest) {
+        return ResponseEntity.ok(itemService.getItemsWithKeys(searchRequest.keys()));
+    }
+
+    @PostMapping("")
+    public ResponseEntity<ItemResponse> addItem(@RequestBody CreateItemRequest createItemRequest) {
+        return ResponseEntity.created(null).body(itemService.createItem(createItemRequest));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteItem(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteItem(@PathVariable Long id) {
         itemService.deleteItemById(id);
-        return ResponseEntity.ok("deleted");
+        return ResponseEntity.ok(null);
     }
 
-    @PostMapping("/{id}/addQuantity")
-    public ResponseEntity<ItemDto> addQuantity(@PathVariable Long id, @RequestParam int quantity) {
-        ItemDto item = itemService.addQuantity(id, quantity);
-        return ResponseEntity.ok().body(item);
+    @PatchMapping("/{id}/add")
+    public ResponseEntity<Void> addQuantity(@PathVariable Long id,
+            @RequestParam Integer quantity) {
+        itemService.addQuantity(id, quantity);
+        return ResponseEntity.ok(null);
     }
-    
+
     @GetMapping("/qr/{qr}")
-    public ResponseEntity<ItemDto> findByQr(@PathVariable Long qr) {
-        ItemDto item = itemService.getItemByQr(qr);
-        if (item != null)
-            return ResponseEntity.ok().body(item);
-        else
-            return ResponseEntity.notFound().build();
-    }
-    
-    @GetMapping("/search")
-    public ResponseEntity<List<ItemDto>> searchByKeys(@RequestParam String value) {
-        List<ItemDto> items = itemService.searchItemsByKeys(value);
-        return ResponseEntity.ok().body(items);
+    public ResponseEntity<ItemResponse> findByQr(@PathVariable String qr) {
+        return ResponseEntity.ok(itemService.getItemByQr(qr));
     }
 
-
-    @PostMapping("/{id}/upload")
-    public ResponseEntity<ItemDto> uploadPhoto(@RequestParam("file") MultipartFile file, @PathVariable Long id) throws IllegalStateException, IOException {
-
-        return ResponseEntity.ok().body(itemService.addPhoto(id, file));
+    @GetMapping("/qr")
+    public ResponseEntity<List<ItemResponse>> searchWithQr(@RequestParam String qr) {
+        return ResponseEntity.ok(itemService.getItemsWithQr(qr));
     }
 
-    @DeleteMapping("/{id}/upload")
-    public ResponseEntity<ItemDto> deletePhoto(@RequestParam String photoName, @PathVariable Long id) {
-        return ResponseEntity.ok().body(itemService.deletePhoto(id, photoName));
+    @PostMapping("/{id}/photo")
+    public ResponseEntity<String> uploadPhoto(@RequestParam("file") MultipartFile file, @PathVariable Long id)
+            throws IllegalStateException,
+            IOException {
+
+        return ResponseEntity.ok().body(itemService.addPhoto(file, id));
     }
-    
-    
+
+    @PutMapping("/{id}") // TODO
+    public ResponseEntity<ItemResponse> editItem(@PathVariable Long id, @RequestBody EditItemRequest editItemRequest) {
+
+        return ResponseEntity.ok(itemService.editItem(editItemRequest));
+    }
+
+    @DeleteMapping("/photo/{id}")
+    public ResponseEntity<Void> deletePhoto(@PathVariable Long id) {
+        photoService.deletePhoto(id);
+        return ResponseEntity.ok(null);
+    }
+
+    @GetMapping("/{id}/photo")
+    public ResponseEntity<List<String>> getPhotosURLs(@PathVariable Long id) {
+        return ResponseEntity.ok(itemService.getPhotos(id));
+    }
+
 }

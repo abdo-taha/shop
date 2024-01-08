@@ -1,26 +1,24 @@
 package com.abdo.shop.services.impl;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.abdo.shop.exceptions.ItemAlreadyExists;
-import com.abdo.shop.exceptions.ItemNotFoundException;
 import com.abdo.shop.mappers.ItemMapper;
-import com.abdo.shop.model.dto.ItemDto;
+import com.abdo.shop.model.dto.request.CreateItemRequest;
+import com.abdo.shop.model.dto.request.EditItemRequest;
+import com.abdo.shop.model.dto.response.ItemResponse;
 import com.abdo.shop.model.entity.ItemEntity;
+import com.abdo.shop.model.entity.KeyEntity;
 import com.abdo.shop.repositories.ItemRepository;
 import com.abdo.shop.services.ItemService;
-import com.abdo.shop.utils.PhotosUtils;
+import com.abdo.shop.services.KeysService;
+import com.abdo.shop.services.PhotoService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,121 +26,115 @@ import lombok.RequiredArgsConstructor;
 @Service
 public class ItemServiceImpl implements ItemService {
 
-    private final ItemRepository itemRepository;
-    private final ItemMapper itemMapper;
-    private final PhotosUtils photosUtils;
-
-
-    String imagesPath = System.getProperty("user.dir") + "\\data\\images\\"; 
+    final private ItemRepository itemRepository;
+    final private KeysService keysService;
+    final private ItemMapper itemMapper;
+    final private PhotoService photoService;
 
     @Override
-    public Optional<ItemDto> getItemById(Long itemId) {
-        return itemRepository.findById(itemId).map(itemMapper::itemEntityTOItemDto);
+    public ItemResponse createItem(CreateItemRequest createItemRequest) {
+        // TODO add name to keys
+        List<KeyEntity> keys = keysService.addKeys(createItemRequest.keys());
+        ItemEntity itemEntity = ItemEntity.builder()
+                .qr(createItemRequest.qr())
+                .name(createItemRequest.name())
+                .description(createItemRequest.description())
+                .price(createItemRequest.price())
+                .quantityInStock(createItemRequest.quantity())
+                .keys(keys)
+                .lastEdit(LocalDateTime.now())
+                .build();
+
+        ItemEntity savedItem = itemRepository.save(itemEntity);
+        return itemMapper.itemEntityItemResponse(savedItem);
+    }
+
+    @Override
+    public ItemResponse getItemById(Long itemId) {
+        // TODO throw
+        ItemEntity item = itemRepository.findById(itemId).orElseThrow();
+        return itemMapper.itemEntityItemResponse(item);
+
     }
 
     @Override
     public void deleteItemById(Long itemId) {
-        if (!isPresent(itemId))
-            throw new ItemNotFoundException(HttpStatus.BAD_REQUEST);
         itemRepository.deleteById(itemId);
     }
 
     @Override
-    public ItemDto editItem(ItemDto item) {
-        if (!isPresent(item.getId())) {
-            throw new ItemNotFoundException(HttpStatus.NOT_FOUND, "item not found with id" + item.getId());
-        }
-        ItemEntity itemEntity = itemMapper.itemDtoToItemEntity(item);
-        ItemEntity savedItem = itemRepository.save(itemEntity);
-        return itemMapper.itemEntityTOItemDto(savedItem);
+    public ItemResponse editItem(EditItemRequest itemRequest) {
+        // TODO throw ... remove mapper
+        ItemEntity old = itemRepository.findById(itemRequest.id()).orElseThrow();
+        ItemEntity item = itemMapper.editItemRequestItemEntity(itemRequest);
+        List<KeyEntity> keys = keysService.addKeys(itemRequest.keys());
+        item.setKeys(keys);
+        item.setLastEdit(LocalDateTime.now());
+        item.setPhotos(old.getPhotos());
+        itemRepository.save(item);
+        return itemMapper.itemEntityItemResponse(item);
     }
 
     @Override
-    public ItemDto createItem(ItemDto item) {
-        if (getItemByQr(item.getQr()) != null)
-            throw new ItemAlreadyExists(HttpStatus.BAD_REQUEST,"there is another item with this qr");
-        ItemEntity itemEntity = itemMapper.itemDtoToItemEntity(item);
-        ItemEntity savedItem = itemRepository.save(itemEntity);
-        return itemMapper.itemEntityTOItemDto(savedItem);
+    public List<ItemResponse> getItemsWithKeys(List<String> keys) {
+        // TODO throw
+        // if (keys.isEmpty()) throw();
+        // TODO cache + pagination
+        System.out.println(keys);
+        ArrayList<ItemEntity> items = new ArrayList<ItemEntity>(keysService.getItems(keys.get(0)));
+        System.out.println(items.size());
+        keys.forEach((key) -> {
+            ArrayList<ItemEntity> temp = new ArrayList<ItemEntity>(keysService.getItems(key));
+            System.out.println(temp.size());
+            items.retainAll(temp);
+            System.out.println(items.size());
+
+        });
+        return items.stream().map(itemMapper::itemEntityItemResponse).collect(Collectors.toList());
     }
 
     @Override
-    public List<ItemDto> getAllItems() {
-        List<ItemEntity> items = (List<ItemEntity>) itemRepository.findAll();
-        return items.stream()
-                .map(itemMapper::itemEntityTOItemDto)
-                .collect(Collectors.toList());
+    public ItemResponse getItemByQr(String qr) {
+        // TODO throw
+        ItemEntity item = itemRepository.findByQr(qr).orElseThrow();
+        return itemMapper.itemEntityItemResponse(item);
     }
 
     @Override
-    public ItemDto addPhoto(Long id, MultipartFile file) throws IllegalStateException, IOException {
-        ItemDto item = getItemById(id).get();
-        if (item == null)
-            return null;
-        String path = imagesPath + id;
-        File directory = new File(path);
-        if (!directory.exists())
-            directory.mkdirs();
-        LocalDateTime time = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss.SSS");
-        String fileName = time.format(formatter)+"."+ photosUtils.getExtensionByStringHandling(file.getOriginalFilename());
-        path += "\\" + fileName;
-        file.transferTo(new File(path));
+    public List<ItemResponse> getItemsWithQr(String qr) {
+        List<ItemEntity> items = itemRepository.findByQrStartsWith(qr);
+        return items.stream().map(itemMapper::itemEntityItemResponse).collect(Collectors.toList());
+    }
 
-        String itemPhotos = (item.getPhotos() == null?"":item.getPhotos()) + " " + fileName;
-        item.setPhotos(itemPhotos);
-        editItem(item);
+    @Override
+    public ItemEntity getItemEntityById(Long itemId) {
+        ItemEntity item = itemRepository.findById(itemId).orElseThrow();
         return item;
     }
 
     @Override
-    public ItemDto deletePhoto(Long id, String photo) {
-        String path = imagesPath + id + "\\" + photo;
-        File file = new File(path);
-        file.delete();
-        ItemDto item = getItemById(id).get();
-        String itemPhotos = item.getPhotos().replace(" " + photo, "");
-        item.setPhotos(itemPhotos);
-        editItem(item);
-        return item;
+    public void addQuantity(Long id, Integer quantity) {
+        // TODO throw
+        ItemEntity item = itemRepository.findById(id).orElseThrow();
+        item.setQuantityInStock(item.getQuantityInStock() + quantity);
+        itemRepository.save(item);
     }
 
     @Override
-    public ItemDto addQuantity(Long id, int quantity) {
-        if (!isPresent(id)) {
-            throw new ItemNotFoundException(HttpStatus.NOT_FOUND);
-        }
-        ItemDto item = getItemById(id).get();
-        item.setQuantity(item.getQuantity() + quantity);
-        return editItem(item);
+    public String addPhoto(MultipartFile photo, Long id) throws IllegalStateException, IOException {
+        return photoService.addPhoto(photo, getItemEntityById(id));
     }
 
     @Override
-    public Boolean isPresent(Long id) {
-        return getItemById(id).isPresent();
+    public List<ItemResponse> getAll() {
+        return itemRepository.findAll().stream().map(itemMapper::itemEntityItemResponse).collect(Collectors.toList());
     }
 
     @Override
-    public ItemDto getItemByQr(Long qr) {
-        ItemEntity item = itemRepository.findByQr(qr);
-        return itemMapper.itemEntityTOItemDto(item);
+    public List<String> getPhotos(Long id) {
+        // TODO throw
+        ItemEntity item = itemRepository.findById(id).orElseThrow();
+        return item.getPhotos().stream().map((photo) -> photoService.getURL(photo.getId())).toList();
     }
 
-    @Override
-    public List<ItemDto> searchItemsByKeys(String keys) {
-        String[] keysArray = keys.split("\\s+");
-        List<String> keysList = Arrays.asList(keysArray);
-        if (keysList.isEmpty())
-            return null;
-        List<ItemEntity> items = itemRepository.findByDescriptionContaining(keysList.get(0));
-        keysList.forEach((key) -> {
-            items.retainAll(itemRepository.findByDescriptionContaining(key));});
-
-        return items
-                .stream()
-                .map(itemMapper::itemEntityTOItemDto)
-                .collect(Collectors.toList());
-    }
-
-    
 }

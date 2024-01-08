@@ -2,33 +2,37 @@ package com.abdo.shop.services;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import com.abdo.shop.model.dto.ItemDto;
+import com.abdo.shop.model.dto.request.CreateItemRequest;
+import com.abdo.shop.model.dto.request.EditItemRequest;
+import com.abdo.shop.model.dto.response.ItemResponse;
+import com.abdo.shop.model.entity.ItemEntity;
 
 public interface ItemService {
 
-    public ItemDto createItem(ItemDto item);
+    public ItemResponse createItem(CreateItemRequest createItemRequest);
 
-    public Optional<ItemDto> getItemById(Long itemId);
-    
+    public ItemResponse getItemById(Long itemId);
+
+    public ItemEntity getItemEntityById(Long itemId);
+
     public void deleteItemById(Long itemId);
-    
-    public ItemDto editItem(ItemDto item);
 
-    public List<ItemDto> getAllItems();
+    public ItemResponse editItem(EditItemRequest item);
 
-    public ItemDto addPhoto(Long id, MultipartFile file) throws IllegalStateException, IOException;
-    
-    public ItemDto deletePhoto(Long id, String photo);
-    
-    public ItemDto addQuantity(Long id, int quantity);
+    public void addQuantity(Long id, Integer quantity);
 
-    public Boolean isPresent(Long id);
+    public List<ItemResponse> getItemsWithKeys(List<String> keys);
 
-    public ItemDto getItemByQr(Long qr);
+    public List<ItemResponse> getItemsWithQr(String qr);
 
-    public List<ItemDto> searchItemsByKeys(String keys);
+    public ItemResponse getItemByQr(String qr);
+
+    String addPhoto(MultipartFile photo, Long id) throws IllegalStateException, IOException;
+
+    public List<ItemResponse> getAll();
+
+    public List<String> getPhotos(Long id);
 }
