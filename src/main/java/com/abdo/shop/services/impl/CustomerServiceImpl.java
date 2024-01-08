@@ -1,18 +1,23 @@
 package com.abdo.shop.services.impl;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.swing.text.html.Option;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import com.abdo.shop.exceptions.NotFoundException;
 import com.abdo.shop.model.dto.request.EditCustomerRequest;
+import com.abdo.shop.model.dto.request.NewReceiptRequest;
 import com.abdo.shop.model.dto.response.CustomerResponse;
+import com.abdo.shop.model.dto.response.PageOfCustomers;
+import com.abdo.shop.model.dto.response.PageOfReceipts;
+import com.abdo.shop.model.dto.response.ReceiptResponse;
 import com.abdo.shop.model.entity.CustomerEntity;
 import com.abdo.shop.repositories.CustomerRepository;
 import com.abdo.shop.services.CustomerService;
+import com.abdo.shop.services.ReceiptService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,11 +26,12 @@ import lombok.RequiredArgsConstructor;
 public class CustomerServiceImpl implements CustomerService {
 
     final private CustomerRepository customerRepository;
+    final private ReceiptService receiptService;
 
     @Override
     public CustomerResponse createCustomer(String name) {
 
-        System.out.println(name);
+        // System.out.println(name);
         Optional<CustomerEntity> savedCustomerCheck = customerRepository.findByName(name);
         CustomerEntity savedCustomer;
         if (!savedCustomerCheck.isPresent()) {
@@ -43,8 +49,9 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public CustomerResponse EditCustomerName(EditCustomerRequest editCustomerRequest) {
-        // TODO throw
-        CustomerEntity customerEntity = customerRepository.findById(editCustomerRequest.id()).orElseThrow();
+
+        CustomerEntity customerEntity = customerRepository.findById(editCustomerRequest.id())
+                .orElseThrow(() -> new NotFoundException());
         customerEntity.setName(editCustomerRequest.name());
         CustomerEntity savedCustomer = customerRepository.save(customerEntity);
         CustomerResponse customerResponse = CustomerResponse.builder().name(savedCustomer.getName())
@@ -58,12 +65,16 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public List<CustomerResponse> searchNames(String name) {
-        // TODO pagination
-        List<CustomerEntity> customers = customerRepository.findByNameStartsWith(name);
-        return customers.stream()
-                .map((customer) -> CustomerResponse.builder().id(customer.getId()).name(customer.getName()).build())
-                .collect(Collectors.toList());
+    public PageOfCustomers searchNames(String name, Integer page) {
+        Page<CustomerEntity> customers = customerRepository.findByNameStartsWith(name, PageRequest.of(page, 10));
+
+        PageOfCustomers pageOfCustomers = PageOfCustomers.builder().hasNext(customers.hasNext())
+                .customers(customers.stream()
+                        .map((customer) -> CustomerResponse.builder().id(customer.getId()).name(customer.getName())
+                                .build())
+                        .collect(Collectors.toList()))
+                .build();
+        return pageOfCustomers;
     }
 
     @Override
@@ -80,17 +91,32 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public List<CustomerResponse> getAll() {
-        return customerRepository.findAll().stream()
+    public PageOfCustomers getAll(Integer page) {
+        Page<CustomerEntity> customers = customerRepository.findAll(PageRequest.of(page, 10));
+        PageOfCustomers customerPage = PageOfCustomers.builder().hasNext(customers.hasNext()).customers(customers
+                .getContent().stream()
                 .map((customer) -> CustomerResponse.builder().id(customer.getId()).name(customer.getName()).build())
-                .toList();
+                .toList()).build();
+        return customerPage;
     }
 
     @Override
     public CustomerResponse getCustomer(Long id) {
-        // TODO throw
-        CustomerEntity customer = customerRepository.findById(id).orElseThrow();
+
+        CustomerEntity customer = customerRepository.findById(id).orElseThrow(() -> new NotFoundException());
         return CustomerResponse.builder().id(customer.getId()).name(customer.getName()).build();
+    }
+
+    @Override
+    public ReceiptResponse createReceipt(NewReceiptRequest newReceiptRequest) {
+        CustomerEntity customerEntity = getOrCreateCustomer(newReceiptRequest.customer());
+        return receiptService.createReceipt(newReceiptRequest, customerEntity);
+    }
+
+    @Override
+    public PageOfReceipts getReceiptsByCustomer(Long id, Integer page) {
+        CustomerEntity customerEntity = customerRepository.findById(id).orElseThrow(() -> new NotFoundException());
+        return receiptService.getReceiptsByCustomer(customerEntity, page);
     }
 
 }

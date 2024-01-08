@@ -1,5 +1,5 @@
 package com.abdo.shop.model.dto.request;
 
-public record SoldItemRequest(Long itemId, Long quantity) {
+public record SoldItemRequest(Long itemId, Integer quantity) {
 
 }

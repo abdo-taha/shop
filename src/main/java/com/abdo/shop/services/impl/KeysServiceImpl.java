@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import com.abdo.shop.exceptions.NotFoundException;
 import com.abdo.shop.model.entity.ItemEntity;
 import com.abdo.shop.model.entity.KeyEntity;
 import com.abdo.shop.repositories.KeysRepository;
@@ -37,8 +38,8 @@ public class KeysServiceImpl implements KeysService {
 
     @Override
     public void addItemToKey(String name, ItemEntity item) {
-        // TODO throw
-        KeyEntity key = keysRepository.findById(name).orElseThrow();
+
+        KeyEntity key = keysRepository.findById(name).orElseThrow(() -> new NotFoundException());
         Set<ItemEntity> set = key.getItems();
         set.add(item);
         key.setItems(set);
@@ -49,8 +50,7 @@ public class KeysServiceImpl implements KeysService {
 
     @Override
     public void removeItemFromKey(String name, ItemEntity item) {
-        // TODO throw
-        KeyEntity key = keysRepository.findById(name).orElseThrow();
+        KeyEntity key = keysRepository.findById(name).orElseThrow(() -> new NotFoundException());
         Set<ItemEntity> set = key.getItems();
         set.remove(item);
         key.setItems(set);

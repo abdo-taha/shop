@@ -18,7 +18,7 @@ import com.abdo.shop.model.dto.request.CreateItemRequest;
 import com.abdo.shop.model.dto.request.EditItemRequest;
 import com.abdo.shop.model.dto.request.SearchRequest;
 import com.abdo.shop.model.dto.response.ItemResponse;
-
+import com.abdo.shop.model.dto.response.PageOfItems;
 import com.abdo.shop.services.ItemService;
 import com.abdo.shop.services.PhotoService;
 
@@ -33,8 +33,8 @@ public class ItemController {
     private final PhotoService photoService;
 
     @GetMapping("")
-    public ResponseEntity<List<ItemResponse>> getAllItems() {
-        return ResponseEntity.ok(itemService.getAll());
+    public ResponseEntity<PageOfItems> getAllItems(@RequestParam(defaultValue = "0") Integer page) {
+        return ResponseEntity.ok(itemService.getAll(page));
 
     }
 
@@ -84,7 +84,7 @@ public class ItemController {
         return ResponseEntity.ok().body(itemService.addPhoto(file, id));
     }
 
-    @PutMapping("/{id}") // TODO
+    @PutMapping("")
     public ResponseEntity<ItemResponse> editItem(@PathVariable Long id, @RequestBody EditItemRequest editItemRequest) {
 
         return ResponseEntity.ok(itemService.editItem(editItemRequest));

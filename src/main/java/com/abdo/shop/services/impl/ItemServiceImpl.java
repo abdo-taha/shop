@@ -3,16 +3,22 @@ package com.abdo.shop.services.impl;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.abdo.shop.exceptions.NotFoundException;
 import com.abdo.shop.mappers.ItemMapper;
 import com.abdo.shop.model.dto.request.CreateItemRequest;
 import com.abdo.shop.model.dto.request.EditItemRequest;
 import com.abdo.shop.model.dto.response.ItemResponse;
+import com.abdo.shop.model.dto.response.PageOfItems;
 import com.abdo.shop.model.entity.ItemEntity;
 import com.abdo.shop.model.entity.KeyEntity;
 import com.abdo.shop.repositories.ItemRepository;
@@ -33,15 +39,17 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemResponse createItem(CreateItemRequest createItemRequest) {
-        // TODO add name to keys
+
         List<KeyEntity> keys = keysService.addKeys(createItemRequest.keys());
+        List<KeyEntity> nameKeys = keysService.addKeys(Arrays.asList(createItemRequest.name().split(" ")));
+        List<KeyEntity> allKeys = Stream.concat(keys.stream(), nameKeys.stream()).toList();
         ItemEntity itemEntity = ItemEntity.builder()
                 .qr(createItemRequest.qr())
                 .name(createItemRequest.name())
                 .description(createItemRequest.description())
                 .price(createItemRequest.price())
                 .quantityInStock(createItemRequest.quantity())
-                .keys(keys)
+                .keys(allKeys)
                 .lastEdit(LocalDateTime.now())
                 .build();
 
@@ -51,8 +59,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemResponse getItemById(Long itemId) {
-        // TODO throw
-        ItemEntity item = itemRepository.findById(itemId).orElseThrow();
+        ItemEntity item = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException());
         return itemMapper.itemEntityItemResponse(item);
 
     }
@@ -64,30 +71,37 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemResponse editItem(EditItemRequest itemRequest) {
-        // TODO throw ... remove mapper
-        ItemEntity old = itemRepository.findById(itemRequest.id()).orElseThrow();
-        ItemEntity item = itemMapper.editItemRequestItemEntity(itemRequest);
+        ItemEntity old = itemRepository.findById(itemRequest.id()).orElseThrow(() -> new NotFoundException());
         List<KeyEntity> keys = keysService.addKeys(itemRequest.keys());
-        item.setKeys(keys);
-        item.setLastEdit(LocalDateTime.now());
-        item.setPhotos(old.getPhotos());
+        List<KeyEntity> nameKeys = keysService.addKeys(Arrays.asList(itemRequest.name().split(" ")));
+        List<KeyEntity> allKeys = Stream.concat(keys.stream(), nameKeys.stream()).toList();
+        // No mapper for forward compatibility
+        ItemEntity item = ItemEntity.builder()
+                .id(itemRequest.id())
+                .qr(itemRequest.qr())
+                .name(itemRequest.name())
+                .description(itemRequest.description())
+                .price(itemRequest.price())
+                .quantityInStock(itemRequest.quantity())
+                .keys(allKeys)
+                .lastEdit(LocalDateTime.now())
+                .photos(old.getPhotos())
+                .build();
+        // keys that in old and not in new
+        // remove relation
         itemRepository.save(item);
         return itemMapper.itemEntityItemResponse(item);
     }
 
     @Override
     public List<ItemResponse> getItemsWithKeys(List<String> keys) {
-        // TODO throw
-        // if (keys.isEmpty()) throw();
+        if (keys.isEmpty())
+            throw (new NotFoundException());
         // TODO cache + pagination
-        System.out.println(keys);
         ArrayList<ItemEntity> items = new ArrayList<ItemEntity>(keysService.getItems(keys.get(0)));
-        System.out.println(items.size());
         keys.forEach((key) -> {
             ArrayList<ItemEntity> temp = new ArrayList<ItemEntity>(keysService.getItems(key));
-            System.out.println(temp.size());
             items.retainAll(temp);
-            System.out.println(items.size());
 
         });
         return items.stream().map(itemMapper::itemEntityItemResponse).collect(Collectors.toList());
@@ -95,8 +109,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemResponse getItemByQr(String qr) {
-        // TODO throw
-        ItemEntity item = itemRepository.findByQr(qr).orElseThrow();
+
+        ItemEntity item = itemRepository.findByQr(qr).orElseThrow(() -> new NotFoundException());
         return itemMapper.itemEntityItemResponse(item);
     }
 
@@ -114,8 +128,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public void addQuantity(Long id, Integer quantity) {
-        // TODO throw
-        ItemEntity item = itemRepository.findById(id).orElseThrow();
+
+        ItemEntity item = itemRepository.findById(id).orElseThrow(() -> new NotFoundException());
         item.setQuantityInStock(item.getQuantityInStock() + quantity);
         itemRepository.save(item);
     }
@@ -126,14 +140,17 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemResponse> getAll() {
-        return itemRepository.findAll().stream().map(itemMapper::itemEntityItemResponse).collect(Collectors.toList());
+    public PageOfItems getAll(Integer page) {
+        Page<ItemEntity> items = itemRepository.findAll(PageRequest.of(page, 5));
+
+        PageOfItems itemResponsePage = PageOfItems.builder().hasNext(items.hasNext())
+                .items(items.getContent().stream().map(itemMapper::itemEntityItemResponse).toList()).build();
+        return itemResponsePage;
     }
 
     @Override
     public List<String> getPhotos(Long id) {
-        // TODO throw
-        ItemEntity item = itemRepository.findById(id).orElseThrow();
+        ItemEntity item = itemRepository.findById(id).orElseThrow(() -> new NotFoundException());
         return item.getPhotos().stream().map((photo) -> photoService.getURL(photo.getId())).toList();
     }
 

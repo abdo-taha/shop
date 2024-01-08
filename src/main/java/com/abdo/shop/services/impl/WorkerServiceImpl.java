@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.abdo.shop.exceptions.NotFoundException;
 import com.abdo.shop.mappers.WorkerMapper;
 import com.abdo.shop.model.dto.request.EditWorkerRequest;
 import com.abdo.shop.model.dto.request.NewWorkerRequest;
@@ -35,8 +36,8 @@ public class WorkerServiceImpl implements WorkerService {
 
     @Override
     public WorkerResponse editWorker(EditWorkerRequest editWorkerRequest) {
-        // TODO not found exception
-        WorkerEntity worker = workerRepository.findById(editWorkerRequest.id()).orElseThrow();
+        WorkerEntity worker = workerRepository.findById(editWorkerRequest.id())
+                .orElseThrow(() -> new NotFoundException());
         worker.setName(editWorkerRequest.name());
         // TODO encrypt
         System.out.println(editWorkerRequest.password());
@@ -60,8 +61,8 @@ public class WorkerServiceImpl implements WorkerService {
 
     @Override
     public WorkerResponse getWorker(Long id) {
-        // TODO throw
-        WorkerEntity workerEntity = workerRepository.findById(id).orElseThrow();
+
+        WorkerEntity workerEntity = workerRepository.findById(id).orElseThrow(() -> new NotFoundException());
         return workerMapper.WorkerEntityToWorkerResponse(workerEntity);
     }
 

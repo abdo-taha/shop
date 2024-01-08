@@ -4,9 +4,9 @@ import com.abdo.shop.model.entity.ItemEntity;
 import com.abdo.shop.model.entity.ReceiptEntity;
 
 public interface SoldItemService {
-    Long addItem(Long quantity, ItemEntity item, ReceiptEntity receipt);
+    Long addItem(Integer quantity, ItemEntity item, ReceiptEntity receipt);
 
     void deleteItem(Long id);
 
-    void editItem(Long id, Long quantity);
+    void editItem(Long id, Integer quantity);
 }

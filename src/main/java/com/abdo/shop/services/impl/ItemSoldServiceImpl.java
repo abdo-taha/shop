@@ -2,6 +2,7 @@ package com.abdo.shop.services.impl;
 
 import org.springframework.stereotype.Service;
 
+import com.abdo.shop.exceptions.NotFoundException;
 import com.abdo.shop.model.entity.ItemEntity;
 import com.abdo.shop.model.entity.ReceiptEntity;
 import com.abdo.shop.model.entity.SoldItemEntity;
@@ -16,7 +17,7 @@ public class ItemSoldServiceImpl implements SoldItemService {
     final private SoldItemRepository soldItemRepository;
 
     @Override
-    public Long addItem(Long quantity, ItemEntity item, ReceiptEntity receipt) {
+    public Long addItem(Integer quantity, ItemEntity item, ReceiptEntity receipt) {
         SoldItemEntity soldItemEntity = SoldItemEntity.builder()
                 .quantity(quantity)
                 .item(item)
@@ -32,9 +33,8 @@ public class ItemSoldServiceImpl implements SoldItemService {
     }
 
     @Override
-    public void editItem(Long id, Long quantity) {
-        // TODO throw
-        SoldItemEntity item = soldItemRepository.findById(id).orElseThrow();
+    public void editItem(Long id, Integer quantity) {
+        SoldItemEntity item = soldItemRepository.findById(id).orElseThrow(() -> new NotFoundException());
         item.setQuantity(quantity);
     }
 

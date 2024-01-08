@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.abdo.shop.model.dto.request.CreateItemRequest;
 import com.abdo.shop.model.dto.request.EditItemRequest;
 import com.abdo.shop.model.dto.response.ItemResponse;
+import com.abdo.shop.model.dto.response.PageOfItems;
 import com.abdo.shop.model.entity.ItemEntity;
 
 public interface ItemService {
@@ -32,7 +33,7 @@ public interface ItemService {
 
     String addPhoto(MultipartFile photo, Long id) throws IllegalStateException, IOException;
 
-    public List<ItemResponse> getAll();
+    public PageOfItems getAll(Integer page);
 
     public List<String> getPhotos(Long id);
 }

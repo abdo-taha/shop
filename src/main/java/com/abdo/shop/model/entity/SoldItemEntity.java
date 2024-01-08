@@ -19,7 +19,7 @@ public class SoldItemEntity {
     @GeneratedValue
     private Long id;
 
-    private Long quantity;
+    private Integer quantity;
 
     @ManyToOne
     private ItemEntity item;

@@ -5,11 +5,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.abdo.shop.model.dto.request.EditCustomerRequest;
 import com.abdo.shop.model.dto.response.CustomerResponse;
+import com.abdo.shop.model.dto.response.PageOfCustomers;
+import com.abdo.shop.model.dto.response.PageOfReceipts;
 import com.abdo.shop.services.CustomerService;
-
 import lombok.RequiredArgsConstructor;
-
-import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,8 +28,8 @@ public class CustomerController {
     final private CustomerService customerService;
 
     @GetMapping("")
-    public ResponseEntity<List<CustomerResponse>> getAll() {
-        return ResponseEntity.ok(customerService.getAll());
+    public ResponseEntity<PageOfCustomers> getAll(@RequestParam(defaultValue = "0") Integer page) {
+        return ResponseEntity.ok(customerService.getAll(page));
     }
 
     @PostMapping("")
@@ -57,10 +56,17 @@ public class CustomerController {
         return ResponseEntity.ok(customerService.getCustomer(id));
     }
 
+    @GetMapping("/{id}/receipts")
+    public ResponseEntity<PageOfReceipts> getReceipts(@PathVariable Long id,
+            @RequestParam(defaultValue = "0") Integer page) {
+        return ResponseEntity.ok(customerService.getReceiptsByCustomer(id, page));
+    }
+
     @GetMapping("/suggest")
-    public ResponseEntity<List<CustomerResponse>> suggestNames(@RequestParam String name) {
-        System.out.println(name);
-        return ResponseEntity.ok(customerService.searchNames(name));
+    public ResponseEntity<PageOfCustomers> suggestNames(@RequestParam String name,
+            @RequestParam(defaultValue = "0") Integer page) {
+        System.out.println(page);
+        return ResponseEntity.ok(customerService.searchNames(name, page));
     }
 
 }
