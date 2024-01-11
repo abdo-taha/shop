@@ -52,7 +52,8 @@ public class ItemServiceImpl implements ItemService {
                 .keys(allKeys)
                 .lastEdit(LocalDateTime.now())
                 .build();
-
+        // for (KeyEntity key : allKeys)
+        // itemEntity.addKey(key);
         ItemEntity savedItem = itemRepository.save(itemEntity);
         return itemMapper.itemEntityItemResponse(savedItem);
     }
@@ -60,6 +61,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemResponse getItemById(Long itemId) {
         ItemEntity item = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException());
+        // System.out.println(item.getKeys());
         return itemMapper.itemEntityItemResponse(item);
 
     }
@@ -76,21 +78,20 @@ public class ItemServiceImpl implements ItemService {
         List<KeyEntity> nameKeys = keysService.addKeys(Arrays.asList(itemRequest.name().split(" ")));
         List<KeyEntity> allKeys = Stream.concat(keys.stream(), nameKeys.stream()).toList();
         // No mapper for forward compatibility
-        ItemEntity item = ItemEntity.builder()
-                .id(itemRequest.id())
-                .qr(itemRequest.qr())
-                .name(itemRequest.name())
-                .description(itemRequest.description())
-                .price(itemRequest.price())
-                .quantityInStock(itemRequest.quantity())
-                .keys(allKeys)
-                .lastEdit(LocalDateTime.now())
-                .photos(old.getPhotos())
-                .build();
+
+        old.setQr(itemRequest.qr());
+        old.setName(itemRequest.name());
+        old.setDescription(itemRequest.description());
+        old.setPrice(itemRequest.price());
+        old.setQuantityInStock(itemRequest.quantity());
+        old.setLastEdit(LocalDateTime.now());
+        old.setKeys(allKeys);
         // keys that in old and not in new
         // remove relation
-        itemRepository.save(item);
-        return itemMapper.itemEntityItemResponse(item);
+        System.out.println("aaaaaaaaaa");
+        itemRepository.save(old);
+        System.out.println("bbbbbbbbbbbbb");
+        return itemMapper.itemEntityItemResponse(old);
     }
 
     @Override

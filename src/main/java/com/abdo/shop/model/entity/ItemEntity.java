@@ -2,6 +2,7 @@ package com.abdo.shop.model.entity;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -40,8 +41,19 @@ public class ItemEntity {
     private Integer quantityInStock;
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL)
     private List<PhotoEntity> photos;
+    // @Builder.Default
     @ManyToMany
     @JoinTable(name = "item_keys", joinColumns = @JoinColumn(name = "item_id"), inverseJoinColumns = @JoinColumn(name = "key_id"))
-    private List<KeyEntity> keys;
+    private List<KeyEntity> keys;// = new HashSet<KeyEntity>();
     private LocalDateTime lastEdit;
+
+    // public void addKey(KeyEntity key) {
+    // this.keys.add(key);
+    // key.addItem(this);
+    // }
+
+    // public void removeKey(KeyEntity key) {
+    // this.keys.remove(key);
+    // key.removeItem(this);
+    // }
 }

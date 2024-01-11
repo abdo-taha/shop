@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import com.abdo.shop.exceptions.NotFoundException;
@@ -114,7 +115,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public PageOfReceipts getReceiptsByCustomer(Long id, Integer page) {
+    public PageOfReceipts getReceiptsByCustomer(@NonNull Long id, Integer page) {
         CustomerEntity customerEntity = customerRepository.findById(id).orElseThrow(() -> new NotFoundException());
         return receiptService.getReceiptsByCustomer(customerEntity, page);
     }

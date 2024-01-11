@@ -23,4 +23,12 @@ public class KeyEntity {
 
     @ManyToMany(mappedBy = "keys")
     private Set<ItemEntity> items;
+
+    // public void addItem(ItemEntity itemEntity) {
+    // items.add(itemEntity);
+    // }
+
+    // public void removeItem(ItemEntity itemEntity) {
+    // items.remove(itemEntity);
+    // }
 }

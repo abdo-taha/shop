@@ -1,5 +1,7 @@
 package com.abdo.shop.services;
 
+import org.springframework.lang.NonNull;
+
 import com.abdo.shop.model.dto.request.EditCustomerRequest;
 import com.abdo.shop.model.dto.request.NewReceiptRequest;
 import com.abdo.shop.model.dto.response.CustomerResponse;
@@ -26,6 +28,6 @@ public interface CustomerService {
 
     public ReceiptResponse createReceipt(NewReceiptRequest newReceiptRequest);
 
-    PageOfReceipts getReceiptsByCustomer(Long id, Integer page);
+    PageOfReceipts getReceiptsByCustomer(@NonNull Long id, Integer page);
 
 }

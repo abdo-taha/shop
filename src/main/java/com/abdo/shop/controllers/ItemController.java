@@ -2,6 +2,8 @@ package com.abdo.shop.controllers;
 
 import java.io.IOException;
 import java.util.List;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,7 +52,7 @@ public class ItemController {
 
     @PostMapping("")
     public ResponseEntity<ItemResponse> addItem(@RequestBody CreateItemRequest createItemRequest) {
-        return ResponseEntity.created(null).body(itemService.createItem(createItemRequest));
+        return ResponseEntity.status(HttpStatus.CREATED).body(itemService.createItem(createItemRequest));
     }
 
     @DeleteMapping("/{id}")
@@ -85,7 +87,7 @@ public class ItemController {
     }
 
     @PutMapping("")
-    public ResponseEntity<ItemResponse> editItem(@PathVariable Long id, @RequestBody EditItemRequest editItemRequest) {
+    public ResponseEntity<ItemResponse> editItem(@RequestBody EditItemRequest editItemRequest) {
 
         return ResponseEntity.ok(itemService.editItem(editItemRequest));
     }

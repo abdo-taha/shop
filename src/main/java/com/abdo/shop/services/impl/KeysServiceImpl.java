@@ -36,26 +36,15 @@ public class KeysServiceImpl implements KeysService {
         return name;
     }
 
-    @Override
-    public void addItemToKey(String name, ItemEntity item) {
-
-        KeyEntity key = keysRepository.findById(name).orElseThrow(() -> new NotFoundException());
-        Set<ItemEntity> set = key.getItems();
-        set.add(item);
-        key.setItems(set);
-        keysRepository.save(key);
-
-        // TODO optimize saving the whole set
-    }
-
-    @Override
-    public void removeItemFromKey(String name, ItemEntity item) {
-        KeyEntity key = keysRepository.findById(name).orElseThrow(() -> new NotFoundException());
-        Set<ItemEntity> set = key.getItems();
-        set.remove(item);
-        key.setItems(set);
-        keysRepository.save(key);
-    }
+    // @Override
+    // public void removeItemFromKey(String name, ItemEntity item) {
+    // KeyEntity key = keysRepository.findById(name).orElseThrow(() -> new
+    // NotFoundException());
+    // List<ItemEntity> set = key.getItems();
+    // set.remove(item);
+    // key.setItems(set);
+    // keysRepository.save(key);
+    // }
 
     @Override
     public List<ItemEntity> getItems(String name) {

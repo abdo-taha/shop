@@ -1,5 +1,6 @@
 package com.abdo.shop.exceptions.handler;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -26,10 +27,13 @@ public class GlobalExceptionHandler {
                 .build();
     }
 
-    // TODO message only in dev
+    //
+    @Value("${spring.profiles.active}")
+    private String activeProfile;
+
     private ErrorResponse getErrorMessageBody(Exception e) {
         return ErrorResponse.builder()
-                .message(e.getMessage())
+                .message("dev".equals(activeProfile) ? e.getMessage() : "internal error")
                 .build();
     }
 }

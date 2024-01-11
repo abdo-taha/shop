@@ -3,6 +3,7 @@ package com.abdo.shop.services.impl;
 import java.io.File;
 import java.io.IOException;
 
+// import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,6 +18,11 @@ public class PhotoStorageLocalImpl implements PhotoStorageService {
     // TODO edit local path and make it in properties
     // TODO edit global path get it from somewhere
 
+    // @Value("${}")
+    // private String localPath;
+    // @Value("${spring.profiles.active}")
+    // private String activeProfile;
+
     final private PhotoRepository photoRepository;
     String localImagesPath = System.getProperty("user.dir") + "\\src\\main\\resources\\static\\images\\";
     String globalImagePath = "localhost:8080/data/images/";
@@ -24,6 +30,7 @@ public class PhotoStorageLocalImpl implements PhotoStorageService {
     @Override
     public String save(MultipartFile photo, Long id) throws IllegalStateException, IOException {
         // TODO photo check extenstion and size
+        // System.out.println(localImagesPath + activeProfile);
         File directory = new File(localImagesPath);
         if (!directory.exists())
             directory.mkdirs();

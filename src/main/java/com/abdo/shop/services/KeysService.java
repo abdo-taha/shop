@@ -11,9 +11,7 @@ public interface KeysService {
 
     List<KeyEntity> addKeys(List<String> names);
 
-    void addItemToKey(String name, ItemEntity item);
-
-    void removeItemFromKey(String name, ItemEntity item);
+    // void removeItemFromKey(String name, ItemEntity item);
 
     List<ItemEntity> getItems(String name);
 
