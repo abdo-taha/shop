@@ -2,35 +2,49 @@ package com.abdo.shop.services.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 
-// import org.springframework.core.env.Environment;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.abdo.shop.config.SecretsConfigProperties;
 import com.abdo.shop.repositories.PhotoRepository;
 import com.abdo.shop.services.PhotoStorageService;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Service
 public class PhotoStorageLocalImpl implements PhotoStorageService {
-    // TODO edit local path and make it in properties
-    // TODO edit global path get it from somewhere
 
-    // @Value("${}")
-    // private String localPath;
-    // @Value("${spring.profiles.active}")
-    // private String activeProfile;
+    private final SecretsConfigProperties secretsConfigProperties;
+    private final PhotoRepository photoRepository;
+    private final Environment environment;
 
-    final private PhotoRepository photoRepository;
     String localImagesPath = System.getProperty("user.dir") + "\\src\\main\\resources\\static\\images\\";
     String globalImagePath = "localhost:8080/data/images/";
 
+    @PostConstruct
+    private void addSecrets() {
+        if (secretsConfigProperties.localImagePath() != null)
+            localImagesPath = secretsConfigProperties.localImagePath();
+        if (secretsConfigProperties.globalImageRelativePath() != null && secretsConfigProperties.publicUrl() != null)
+            globalImagePath = secretsConfigProperties.publicUrl() + ":8080"
+                    + secretsConfigProperties.globalImageRelativePath();
+
+        try {
+            globalImagePath = InetAddress.getLocalHost().getHostAddress() + ":" +
+                    environment.getProperty("local.server.port")
+                    + secretsConfigProperties.globalImageRelativePath();
+        } catch (Exception e) {
+        }
+
+    }
+
     @Override
     public String save(MultipartFile photo, Long id) throws IllegalStateException, IOException {
-        // TODO photo check extenstion and size
-        // System.out.println(localImagesPath + activeProfile);
         File directory = new File(localImagesPath);
         if (!directory.exists())
             directory.mkdirs();
@@ -41,6 +55,7 @@ public class PhotoStorageLocalImpl implements PhotoStorageService {
 
     @Override
     public String getURL(Long id) {
+        addSecrets();
         return globalImagePath + Long.toString(id) + "." + getPhotoExt(id);
     }
 

@@ -1,6 +1,7 @@
 package com.abdo.shop.mappers;
 
-import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -25,8 +26,8 @@ public interface ItemMapper {
     @Mapping(target = "quantityInStock", source = "quantity")
     ItemEntity editItemRequestItemEntity(EditItemRequest editItemRequest);
 
-    default List<String> map(List<KeyEntity> keys) {
-        return keys.stream().map(KeyEntity::getName).toList();
+    default Set<String> map(Set<KeyEntity> keys) {
+        return keys.stream().map(KeyEntity::getName).collect(Collectors.toSet());
     }
 
     // default List<Long> mapPhotos(List<PhotoEntity> photoEntities) {

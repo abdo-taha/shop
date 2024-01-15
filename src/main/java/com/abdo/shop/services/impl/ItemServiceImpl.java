@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -42,18 +44,18 @@ public class ItemServiceImpl implements ItemService {
 
         List<KeyEntity> keys = keysService.addKeys(createItemRequest.keys());
         List<KeyEntity> nameKeys = keysService.addKeys(Arrays.asList(createItemRequest.name().split(" ")));
-        List<KeyEntity> allKeys = Stream.concat(keys.stream(), nameKeys.stream()).toList();
+        Set<KeyEntity> keysSet = new HashSet<KeyEntity>();
+        keysSet.addAll(keys);
+        keysSet.addAll(nameKeys);
         ItemEntity itemEntity = ItemEntity.builder()
                 .qr(createItemRequest.qr())
                 .name(createItemRequest.name())
                 .description(createItemRequest.description())
                 .price(createItemRequest.price())
                 .quantityInStock(createItemRequest.quantity())
-                .keys(allKeys)
+                .keys(keysSet)
                 .lastEdit(LocalDateTime.now())
                 .build();
-        // for (KeyEntity key : allKeys)
-        // itemEntity.addKey(key);
         ItemEntity savedItem = itemRepository.save(itemEntity);
         return itemMapper.itemEntityItemResponse(savedItem);
     }
@@ -61,7 +63,6 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemResponse getItemById(Long itemId) {
         ItemEntity item = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException());
-        // System.out.println(item.getKeys());
         return itemMapper.itemEntityItemResponse(item);
 
     }
@@ -85,12 +86,14 @@ public class ItemServiceImpl implements ItemService {
         old.setPrice(itemRequest.price());
         old.setQuantityInStock(itemRequest.quantity());
         old.setLastEdit(LocalDateTime.now());
-        old.setKeys(allKeys);
-        // keys that in old and not in new
-        // remove relation
-        System.out.println("aaaaaaaaaa");
+
+        List<KeyEntity> toRemove = old.getKeys().stream().filter(element -> !allKeys.contains(element)).toList();
+        List<KeyEntity> toAdd = allKeys.stream().filter(element -> !old.getKeys().contains(element)).toList();
+        for (KeyEntity key : toRemove)
+            old.getKeys().remove(key);
+        for (KeyEntity key : toAdd)
+            old.getKeys().add(key);
         itemRepository.save(old);
-        System.out.println("bbbbbbbbbbbbb");
         return itemMapper.itemEntityItemResponse(old);
     }
 
@@ -98,14 +101,16 @@ public class ItemServiceImpl implements ItemService {
     public List<ItemResponse> getItemsWithKeys(List<String> keys) {
         if (keys.isEmpty())
             throw (new NotFoundException());
-        // TODO cache + pagination
+
         ArrayList<ItemEntity> items = new ArrayList<ItemEntity>(keysService.getItems(keys.get(0)));
         keys.forEach((key) -> {
             ArrayList<ItemEntity> temp = new ArrayList<ItemEntity>(keysService.getItems(key));
             items.retainAll(temp);
 
         });
-        return items.stream().map(itemMapper::itemEntityItemResponse).collect(Collectors.toList());
+        return items.stream().map(itemMapper::itemEntityItemResponse)
+                .collect(Collectors.toList()).subList(0, Math.min(items.size(), 20));
+
     }
 
     @Override

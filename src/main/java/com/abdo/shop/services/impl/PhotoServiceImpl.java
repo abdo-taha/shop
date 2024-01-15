@@ -22,7 +22,7 @@ public class PhotoServiceImpl implements PhotoService {
 
     @Override
     public String addPhoto(MultipartFile photo, ItemEntity item) throws IllegalStateException, IOException {
-        // TODO ext
+        // TODO more extension control (not important for me)
         PhotoEntity photoDB = PhotoEntity.builder().item(item).ext("jpg").build();
         PhotoEntity savedPhoto = photoRepository.save(photoDB);
 

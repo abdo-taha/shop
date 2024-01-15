@@ -1,6 +1,6 @@
 package com.abdo.shop.model.entity;
 
-import java.util.Set;
+import java.util.List;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -22,7 +22,7 @@ public class KeyEntity {
     private String name;
 
     @ManyToMany(mappedBy = "keys")
-    private Set<ItemEntity> items;
+    private List<ItemEntity> items;
 
     // public void addItem(ItemEntity itemEntity) {
     // items.add(itemEntity);

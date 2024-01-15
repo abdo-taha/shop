@@ -1,16 +1,13 @@
 package com.abdo.shop.services.impl;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import com.abdo.shop.exceptions.NotFoundException;
 import com.abdo.shop.model.entity.ItemEntity;
 import com.abdo.shop.model.entity.KeyEntity;
 import com.abdo.shop.repositories.KeysRepository;
@@ -29,27 +26,16 @@ public class KeysServiceImpl implements KeysService {
         if (!keysRepository.findById(name).isPresent()) {
             KeyEntity key = KeyEntity.builder()
                     .name(name)
-                    .items(new HashSet<ItemEntity>())
                     .build();
             keysRepository.save(key);
         }
         return name;
     }
 
-    // @Override
-    // public void removeItemFromKey(String name, ItemEntity item) {
-    // KeyEntity key = keysRepository.findById(name).orElseThrow(() -> new
-    // NotFoundException());
-    // List<ItemEntity> set = key.getItems();
-    // set.remove(item);
-    // key.setItems(set);
-    // keysRepository.save(key);
-    // }
-
     @Override
     public List<ItemEntity> getItems(String name) {
         KeyEntity key = keysRepository.findById(name).orElseThrow();
-        Set<ItemEntity> set = key.getItems();
+        List<ItemEntity> set = key.getItems();
         return set.stream().toList();
     }
 

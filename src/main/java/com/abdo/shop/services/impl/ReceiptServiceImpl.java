@@ -18,6 +18,7 @@ import com.abdo.shop.services.ItemService;
 import com.abdo.shop.services.ReceiptService;
 import com.abdo.shop.services.SoldItemService;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -29,9 +30,9 @@ public class ReceiptServiceImpl implements ReceiptService {
     private final ItemService itemService;
     private final ReceiptMapper receiptMapper;
 
+    @Transactional
     @Override
     public ReceiptResponse createReceipt(NewReceiptRequest newReceiptRequest, CustomerEntity customerEntity) {
-        // TODO transaction
         ReceiptEntity receiptEntity = ReceiptEntity.builder().lastEdited(LocalDateTime.now()).total(0.0)
                 .customer(customerEntity)
                 .build();
@@ -51,7 +52,6 @@ public class ReceiptServiceImpl implements ReceiptService {
     @Override
     public ReceiptResponse getReceipt(Long id) {
         ReceiptEntity receiptEntity = receiptRepository.findById(id).orElseThrow(() -> new NotFoundException());
-        // System.out.println(receiptEntity);
         return receiptMapper.receiptEntityToReceiptResponse(receiptEntity);
     }
 

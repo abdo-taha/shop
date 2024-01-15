@@ -10,13 +10,11 @@ public interface ReceiptService {
 
     ReceiptResponse getReceipt(Long id);
 
-    // List<ReceiptResponse> getReceiptsOfCustomer(String name);
-
     PageOfReceipts getReceipts(Integer page);
 
     PageOfReceipts getReceiptsByCustomer(CustomerEntity customerEntity, Integer page);
 
     void deleteReceipt(Long id);
 
-    // TODO edit
+    // TODO edit (later)
 }
