@@ -2,9 +2,10 @@ package com.abdo.shop.services;
 
 import com.abdo.shop.model.entity.ItemEntity;
 import com.abdo.shop.model.entity.ReceiptEntity;
+import com.abdo.shop.model.entity.SoldItemEntity;
 
 public interface SoldItemService {
-    Long addItem(Integer quantity, ItemEntity item, ReceiptEntity receipt);
+    SoldItemEntity addItem(Integer quantity, ItemEntity item, ReceiptEntity receipt);
 
     void deleteItem(Long id);
 

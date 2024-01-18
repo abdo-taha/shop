@@ -17,14 +17,14 @@ public class ItemSoldServiceImpl implements SoldItemService {
     final private SoldItemRepository soldItemRepository;
 
     @Override
-    public Long addItem(Integer quantity, ItemEntity item, ReceiptEntity receipt) {
+    public SoldItemEntity addItem(Integer quantity, ItemEntity item, ReceiptEntity receipt) {
         SoldItemEntity soldItemEntity = SoldItemEntity.builder()
                 .quantity(quantity)
                 .item(item)
                 .receipt(receipt)
                 .build();
-        SoldItemEntity savedItem = soldItemRepository.save(soldItemEntity);
-        return savedItem.getId();
+        return soldItemRepository.save(soldItemEntity);
+
     }
 
     @Override
