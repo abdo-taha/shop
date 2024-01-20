@@ -1,7 +1,9 @@
 package com.abdo.shop.model.entity;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.HashSet;
+// import java.util.List;
+import java.util.Set;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -33,6 +35,16 @@ public class ReceiptEntity {
     @ManyToOne
     private CustomerEntity customer;
 
+    @Builder.Default
     @OneToMany(mappedBy = "receipt", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private List<SoldItemEntity> items;
+    private Set<SoldItemEntity> items = new HashSet<SoldItemEntity>();
+
+    public void addItem(SoldItemEntity item) {
+        items.add(item);
+        // item.setReceipt(this);
+    }
+
+    public void removeItem(SoldItemEntity item) {
+        items.remove(item);
+    }
 }

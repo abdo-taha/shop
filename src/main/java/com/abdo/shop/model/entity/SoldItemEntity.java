@@ -6,13 +6,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+// import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Data
+// @Data
+@Setter
+@Getter
 @Builder
 public class SoldItemEntity {
     @Id
@@ -27,4 +31,7 @@ public class SoldItemEntity {
     @ManyToOne
     private ReceiptEntity receipt;
 
+    // public int hashCode() {
+    // return id.hashCode();
+    // }
 }

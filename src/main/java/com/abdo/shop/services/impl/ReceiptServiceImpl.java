@@ -1,9 +1,6 @@
 package com.abdo.shop.services.impl;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -42,15 +39,16 @@ public class ReceiptServiceImpl implements ReceiptService {
                 .build();
         ReceiptEntity savedReceipt = receiptRepository.save(receiptEntity);
         final Double[] total = { 0.0 };
-        List<SoldItemEntity> soldItems = new ArrayList<SoldItemEntity>();
+        // Set<SoldItemEntity> soldItems = new HashSet<SoldItemEntity>();
         newReceiptRequest.items().forEach(item -> {
             ItemEntity itemEntity = itemService.getItemEntityById(item.itemId());
-            soldItems.add(soldItemService.addItem(item.quantity(), itemEntity, savedReceipt));
+            SoldItemEntity soldItemEntity = soldItemService.addItem(item.quantity(), itemEntity, savedReceipt);
+            savedReceipt.addItem(soldItemEntity);
             total[0] += item.quantity() * itemEntity.getPrice();
             itemEntity.setQuantityInStock(itemEntity.getQuantityInStock() - item.quantity());
         });
         savedReceipt.setTotal(total[0]);
-        savedReceipt.setItems(soldItems);
+        // savedReceipt.setItems(soldItems);
         ReceiptEntity receipt = receiptRepository.save(savedReceipt);
         return receiptMapper.receiptEntityToReceiptResponse(receipt);
     }
